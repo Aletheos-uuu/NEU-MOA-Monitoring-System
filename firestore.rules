@@ -20,27 +20,39 @@ service cloud.firestore {
 
     // User rules
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || getRole() == 'admin');
-      allow write: if isSignedIn() && getRole() == 'admin';
-      // Allow initial creation by the user themselves during first login
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      // Authenticated @neu.edu.ph users can read/write their own document
+      // Admins can read/write all user documents
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || getRole() == 'admin');
     }
 
     // MOA rules
     match /moas/{moaId} {
       allow read: if isSignedIn() && (
+        // Admins can read all records (including deleted)
         getRole() == 'admin' ||
+        // Faculty can read all non-deleted records
         (getRole() == 'faculty' && resource.data.isDeleted == false) ||
-        (getRole() == 'student' && resource.data.isDeleted == false && resource.data.status.upper().startsWith('APPROVED'))
+        // Students can only read non-deleted, approved records
+        (getRole() == 'student' && 
+         resource.data.isDeleted == false && 
+         resource.data.status.upper().startsWith('APPROVED'))
       );
       
-      allow create: if isSignedIn() && (getRole() == 'admin' || (getRole() == 'faculty' && canManage()));
+      allow create: if isSignedIn() && (
+        getRole() == 'admin' || 
+        (getRole() == 'faculty' && canManage())
+      );
       
       allow update: if isSignedIn() && (
+        // Admins can update everything
         getRole() == 'admin' || 
-        (getRole() == 'faculty' && canManage() && request.resource.data.isDeleted == resource.data.isDeleted)
+        // Faculty with management permission can update non-deleted fields
+        (getRole() == 'faculty' && canManage() && 
+         // Faculty cannot change deletion status (soft delete or recover)
+         request.resource.data.isDeleted == resource.data.isDeleted)
       );
       
+      // Only admins can perform hard deletes (though the app uses soft deletes)
       allow delete: if isSignedIn() && getRole() == 'admin';
     }
     
