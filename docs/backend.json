@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "MOA": {
+      "title": "Memorandum of Agreement",
+      "description": "Represents a partnership agreement between NEU and an external entity.",
+      "type": "object",
+      "properties": {
+        "hteId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "address": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "contactEmail": { "type": "string", "format": "email" },
+        "industryType": { "type": "string", "enum": ["Telecom", "Food", "Services", "Technology", "Finance"] },
+        "effectiveDate": { "type": "string", "format": "date" },
+        "expiryDate": { "type": "string", "format": "date" },
+        "status": { 
+          "type": "string", 
+          "enum": [
+            "APPROVED: Signed by President",
+            "APPROVED: On-going notarization",
+            "APPROVED: No notarization needed",
+            "PROCESSING: Awaiting signature by HTE partner",
+            "PROCESSING: MOA draft sent to Legal Office",
+            "PROCESSING: MOA draft sent to VPAA/OP for approval",
+            "EXPIRED: No renewal done",
+            "EXPIRING: Two months before expiration"
+          ] 
+        },
+        "endorsedByCollege": { "type": "string" },
+        "isDeleted": { "type": "boolean" },
+        "auditTrail": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "userName": { "type": "string" },
+              "userEmail": { "type": "string" },
+              "operation": { "type": "string", "enum": ["INSERT", "UPDATE", "DELETE", "RECOVER"] },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "required": ["hteId", "companyName", "effectiveDate", "expiryDate", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/moas/{moaId}": {
+      "schema": "MOA",
+      "description": "Collection of all Memorandum of Agreement documents."
+    }
+  }
+}
