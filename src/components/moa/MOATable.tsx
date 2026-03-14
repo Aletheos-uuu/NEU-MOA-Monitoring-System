@@ -5,13 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Edit, MoreHorizontal, Trash2, RotateCcw, CheckCircle2, Clock, AlertCircle, ExternalLink } from 'lucide-react';
+import { Edit, MoreHorizontal, Trash2, RotateCcw, CheckCircle2, Clock, AlertCircle, ExternalLink, History } from 'lucide-react';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { MoaFormDialog } from './MoaFormDialog';
+import { AuditTrailDialog } from './AuditTrailDialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -40,6 +41,7 @@ interface MOATableProps {
 export function MOATable({ data, role, loading }: MOATableProps) {
   const { profile } = useAuth();
   const [editingMoa, setEditingMoa] = useState<MOA | null>(null);
+  const [auditMoa, setAuditMoa] = useState<MOA | null>(null);
 
   const handleSoftDelete = (moa: MOA) => {
     if (!profile) return;
@@ -145,10 +147,21 @@ export function MOATable({ data, role, loading }: MOATableProps) {
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link href={`/moa/${moa.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="View Details">
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </Link>
+                  {role === 'admin' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-amber-600"
+                      onClick={() => setAuditMoa(moa)}
+                      title="View Audit Trail"
+                    >
+                      <History className="h-4 w-4" />
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -184,6 +197,15 @@ export function MOATable({ data, role, loading }: MOATableProps) {
           open={!!editingMoa} 
           onOpenChange={(open) => !open && setEditingMoa(null)} 
           initialData={editingMoa}
+        />
+      )}
+
+      {auditMoa && (
+        <AuditTrailDialog
+          open={!!auditMoa}
+          onOpenChange={(open) => !open && setAuditMoa(null)}
+          trail={auditMoa.auditTrail}
+          companyName={auditMoa.companyName}
         />
       )}
     </>

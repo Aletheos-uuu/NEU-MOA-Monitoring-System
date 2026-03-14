@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email.endsWith('@neu.edu.ph');
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getRole() {
+      return getUserData().role;
+    }
+
+    function canManage() {
+      return getUserData().canManageMOA == true;
+    }
+
+    // User rules
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || getRole() == 'admin');
+      allow write: if isSignedIn() && getRole() == 'admin';
+      // Allow initial creation by the user themselves during first login
+      allow create: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // MOA rules
+    match /moas/{moaId} {
+      allow read: if isSignedIn() && (
+        getRole() == 'admin' ||
+        (getRole() == 'faculty' && resource.data.isDeleted == false) ||
+        (getRole() == 'student' && resource.data.isDeleted == false && resource.data.status.upper().startsWith('APPROVED'))
+      );
+      
+      allow create: if isSignedIn() && (getRole() == 'admin' || (getRole() == 'faculty' && canManage()));
+      
+      allow update: if isSignedIn() && (
+        getRole() == 'admin' || 
+        (getRole() == 'faculty' && canManage() && request.resource.data.isDeleted == resource.data.isDeleted)
+      );
+      
+      allow delete: if isSignedIn() && getRole() == 'admin';
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
