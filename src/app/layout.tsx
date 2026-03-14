@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
-  title: 'NEU MOA Hub',
+  title: 'NEU MOA Monitor',
   description: 'NEU Memorandum of Agreement Monitoring System',
 };
 

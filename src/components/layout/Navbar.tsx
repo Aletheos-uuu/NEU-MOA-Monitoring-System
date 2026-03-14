@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -17,7 +18,7 @@ export function Navbar() {
           <div className="flex items-center gap-8">
             <Link href={`/${profile.role}`} className="flex items-center gap-2 font-bold text-primary text-xl">
               <FileText className="h-6 w-6" />
-              <span>NEU MOA Hub</span>
+              <span>NEU MOA Monitor</span>
             </Link>
             
             <div className="hidden md:flex items-center gap-6">

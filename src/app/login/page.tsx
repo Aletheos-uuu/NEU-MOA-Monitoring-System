@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +28,7 @@ export default function LoginPage() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold tracking-tight text-primary">NEU MOA Hub</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight text-primary">NEU MOA Monitor</CardTitle>
             <CardDescription className="text-lg mt-2 font-medium text-muted-foreground">
               Memorandum of Agreement Monitoring App
             </CardDescription>
