@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -31,6 +32,12 @@ interface MOA {
   auditTrail: any[];
 }
 
+const APPROVED_STATUSES = [
+  "APPROVED: Signed by President",
+  "APPROVED: On-going notarization",
+  "APPROVED: No notarization needed",
+];
+
 export function MOAList({ role }: { role: 'admin' | 'faculty' | 'student' }) {
   const [moas, setMoas] = useState<MOA[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,26 +45,36 @@ export function MOAList({ role }: { role: 'admin' | 'faculty' | 'student' }) {
   const { profile } = useAuth();
 
   useEffect(() => {
-    let q = query(collection(db, 'moas'));
+    let q;
     
-    // Non-admins only see non-deleted MOAs
-    if (role !== 'admin') {
+    if (role === 'admin') {
+      q = query(collection(db, 'moas'));
+    } else if (role === 'faculty') {
       q = query(collection(db, 'moas'), where('isDeleted', '==', false));
+    } else {
+      // Students must query only non-deleted, approved MOAs to satisfy Security Rules
+      q = query(
+        collection(db, 'moas'), 
+        where('isDeleted', '==', false),
+        where('status', 'in', APPROVED_STATUSES)
+      );
     }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MOA));
-      
-      // Additional client-side filtering for students (only approved)
-      if (role === 'student') {
-        data = data.filter(moa => moa.status.startsWith('APPROVED'));
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MOA));
+        setMoas(data);
+        setLoading(false);
+      }, 
+      async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'moas',
+          operation: role === 'admin' ? 'list' : 'list', // list operation maps to rule 'read' on collection
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
       }
-
-      setMoas(data);
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore Listen Error:", error);
-    });
+    );
 
     return () => unsubscribe();
   }, [role]);

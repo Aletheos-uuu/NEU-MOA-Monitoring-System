@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,6 +14,8 @@ import { FileText, AlertTriangle, Clock, CheckCircle2, Search, PlusCircle, Filte
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { startOfToday, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface MOA {
   id: string;
@@ -43,11 +46,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const q = query(collection(db, 'moas'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MOA));
-      setMoas(data);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MOA));
+        setMoas(data);
+        setLoading(false);
+      },
+      async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'moas',
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
+      }
+    );
     return () => unsubscribe();
   }, []);
 
