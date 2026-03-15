@@ -21,16 +21,17 @@ export function Navbar() {
             </Link>
             
             <div className="hidden md:flex items-center gap-6">
-              <Link href={`/${profile.role}`} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Link>
-              
               {profile.role === 'admin' && (
-                <Link href="/admin/users" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                  <Users className="h-4 w-4" />
-                  User Management
-                </Link>
+                <>
+                  <Link href="/admin" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <Link href="/admin/users" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    <Users className="h-4 w-4" />
+                    User Management
+                  </Link>
+                </>
               )}
             </div>
           </div>
