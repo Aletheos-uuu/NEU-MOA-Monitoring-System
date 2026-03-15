@@ -274,7 +274,7 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
                         "APPROVED: No notarization needed",
                         "PROCESSING: Awaiting signature by HTE partner",
                         "PROCESSING: MOA draft sent to Legal Office for Review",
-                        "PROCESSING: MOA draft and opinion of legal office sent to VPAA/OP",
+                        "PROCESSING: MOA draft and opinion of legal office sent to VPAA/OP for approval",
                         "EXPIRED: No renewal done",
                         "EXPIRING: Two months before expiration"
                       ].map(s => (
