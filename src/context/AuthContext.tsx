@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await signOut(auth);
           return;
         }
+        if (firebaseUser.displayName && data.fullName === 'NEU User') {
+          await updateDoc(userRef, { fullName: firebaseUser.displayName });
+          data.fullName = firebaseUser.displayName;
+        }
+      
         setProfile(data);
       } else {
         console.log("No profile found, creating new student profile for:", firebaseUser.uid);
