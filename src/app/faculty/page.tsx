@@ -65,7 +65,6 @@ export default function FacultyDashboard() {
   const [datePreset, setDatePreset] = useState('all');
 
   useEffect(() => {
-    // Faculty only see non-deleted records
     const q = query(collection(db, 'moas'), where('isDeleted', '==', false));
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
@@ -103,7 +102,8 @@ export default function FacultyDashboard() {
           moa.contactPerson?.toLowerCase().includes(search) ||
           moa.contactEmail?.toLowerCase().includes(search) ||
           moa.endorsedByCollege?.toLowerCase().includes(search) ||
-          moa.industryType.toLowerCase().includes(search)
+          moa.industryType.toLowerCase().includes(search) ||
+          moa.status.toLowerCase().includes(search)
         );
       }
 
@@ -139,7 +139,6 @@ export default function FacultyDashboard() {
           )}
         </div>
 
-        {/* Stats Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card className="border-l-4 border-l-green-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -179,13 +178,12 @@ export default function FacultyDashboard() {
           </Card>
         </div>
 
-        {/* Filters and Search */}
         <div className="bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by company, contact, or college..." 
+                placeholder="Search by company, status, contact, or college..." 
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

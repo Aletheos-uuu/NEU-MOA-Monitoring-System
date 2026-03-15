@@ -60,7 +60,6 @@ export default function AdminDashboard() {
   const [moas, setMoas] = useState<MOA[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('all');
   const [datePreset, setDatePreset] = useState('all');
@@ -74,11 +73,10 @@ export default function AdminDashboard() {
         setLoading(false);
       },
       async (err) => {
-        const permissionError = new FirestorePermissionError({
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'moas',
           operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        }));
         setLoading(false);
       }
     );
@@ -87,10 +85,8 @@ export default function AdminDashboard() {
 
   const filteredMoas = useMemo(() => {
     return moas.filter(moa => {
-      // College Filter
       if (collegeFilter !== 'all' && moa.endorsedByCollege !== collegeFilter) return false;
 
-      // Date Preset Filter
       if (datePreset !== 'all') {
         const effectiveDate = parseISO(moa.effectiveDate);
         if (datePreset === 'today' && !isAfter(effectiveDate, startOfToday())) return false;
@@ -98,7 +94,6 @@ export default function AdminDashboard() {
         if (datePreset === 'month' && !isAfter(effectiveDate, startOfMonth(new Date()))) return false;
       }
 
-      // Search Filter
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
         return (
@@ -107,7 +102,8 @@ export default function AdminDashboard() {
           moa.contactPerson?.toLowerCase().includes(search) ||
           moa.contactEmail?.toLowerCase().includes(search) ||
           moa.endorsedByCollege?.toLowerCase().includes(search) ||
-          moa.industryType.toLowerCase().includes(search)
+          moa.industryType.toLowerCase().includes(search) ||
+          moa.status.toLowerCase().includes(search)
         );
       }
 
@@ -116,7 +112,6 @@ export default function AdminDashboard() {
   }, [moas, collegeFilter, datePreset, searchTerm]);
 
   const stats = useMemo(() => {
-    // Stats are computed from the FILTERED list as per requirements
     const active = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('APPROVED')).length;
     const processing = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('PROCESSING')).length;
     const expired = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('EXPIRED')).length;
@@ -140,7 +135,6 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
-        {/* Stats Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card className="border-l-4 border-l-green-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -149,7 +143,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.active}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Approved agreements</p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-amber-500 shadow-sm">
@@ -159,7 +152,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.processing}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Pending approval</p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-red-500 shadow-sm">
@@ -169,7 +161,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.expired}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Ended partnerships</p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-indigo-500 shadow-sm">
@@ -179,18 +170,16 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.expiring}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Renewal required</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters and Search */}
         <div className="bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by company, contact, or college..." 
+                placeholder="Search by company, status, contact, or college..." 
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -226,7 +215,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Table View */}
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="p-4 border-b bg-muted/30">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-tight flex items-center gap-2">

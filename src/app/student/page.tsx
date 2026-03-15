@@ -68,7 +68,6 @@ export default function StudentDashboard() {
   const [datePreset, setDatePreset] = useState('all');
 
   useEffect(() => {
-    // Students only see non-deleted, approved records
     const q = query(
       collection(db, 'moas'), 
       where('isDeleted', '==', false),
@@ -110,7 +109,8 @@ export default function StudentDashboard() {
           moa.contactPerson?.toLowerCase().includes(search) ||
           moa.contactEmail?.toLowerCase().includes(search) ||
           moa.endorsedByCollege?.toLowerCase().includes(search) ||
-          moa.industryType.toLowerCase().includes(search)
+          moa.industryType.toLowerCase().includes(search) ||
+          moa.status.toLowerCase().includes(search)
         );
       }
 
@@ -137,7 +137,6 @@ export default function StudentDashboard() {
           <p className="text-muted-foreground text-sm">Welcome, {profile?.fullName}. Browse verified internship and institutional research opportunities.</p>
         </div>
 
-        {/* Stats Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card className="border-l-4 border-l-green-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -146,7 +145,6 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.active}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Institutional agreements</p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-primary shadow-sm">
@@ -156,18 +154,16 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.colleges}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Unique departments</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters and Search */}
         <div className="bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by company or college..." 
+                placeholder="Search by company, status, or college..." 
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -188,6 +184,17 @@ export default function StudentDashboard() {
                   </SelectContent>
                 </Select>
               </div>
+              <Select value={datePreset} onValueChange={setDatePreset}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Since Today</SelectItem>
+                  <SelectItem value="week">Since This Week</SelectItem>
+                  <SelectItem value="month">Since This Month</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
