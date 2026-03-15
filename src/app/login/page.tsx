@@ -1,16 +1,17 @@
-
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LoginPage() {
   const { login, profile, loading } = useAuth();
   const router = useRouter();
+  const neuLogo = PlaceHolderImages.find(img => img.id === 'neu-logo');
 
   useEffect(() => {
     if (profile && !loading) {
@@ -23,8 +24,17 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="bg-primary/10 p-3 rounded-2xl">
-              <FileText className="h-12 w-12 text-primary" />
+            <div className="p-2">
+              {neuLogo && (
+                <Image 
+                  src={neuLogo.imageUrl} 
+                  alt="NEU Logo" 
+                  width={120} 
+                  height={120} 
+                  className="object-contain"
+                  data-ai-hint={neuLogo.imageHint}
+                />
+              )}
             </div>
           </div>
           <div>

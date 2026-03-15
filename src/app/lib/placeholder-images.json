@@ -1,6 +1,11 @@
-
 {
   "placeholderImages": [
+    {
+      "id": "neu-logo",
+      "description": "New Era University Official Logo",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/en/b/b3/New_Era_University_logo.png",
+      "imageHint": "university logo"
+    },
     {
       "id": "moa-doc",
       "description": "A professional document with signatures",

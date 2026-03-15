@@ -1,12 +1,15 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { FileText, Users, LayoutDashboard, LogOut } from 'lucide-react';
+import { Users, LayoutDashboard, LogOut } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Navbar() {
   const { profile, logout } = useAuth();
+  const neuLogo = PlaceHolderImages.find(img => img.id === 'neu-logo');
 
   if (!profile) return null;
 
@@ -15,8 +18,17 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center gap-8">
-            <Link href={`/${profile.role}`} className="flex items-center gap-2 font-bold text-primary text-xl">
-              <FileText className="h-6 w-6" />
+            <Link href={`/${profile.role}`} className="flex items-center gap-3 font-bold text-primary text-xl">
+              {neuLogo && (
+                <Image 
+                  src={neuLogo.imageUrl} 
+                  alt="NEU Logo" 
+                  width={40} 
+                  height={40} 
+                  className="object-contain"
+                  data-ai-hint={neuLogo.imageHint}
+                />
+              )}
               <span>NEU MOA Monitor</span>
             </Link>
             
