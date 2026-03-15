@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,6 +15,28 @@ import { db } from '@/lib/firebase';
 import { startOfToday, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
+const COLLEGES = [
+  "College of Accountancy",
+  "College of Agriculture",
+  "College of Arts and Sciences",
+  "College of Business Administration",
+  "College of Communication",
+  "College of Criminology",
+  "College of Education",
+  "College of Engineering and Architecture",
+  "College of Informatics and Computing Studies",
+  "College of Medical Technology",
+  "College of Midwifery",
+  "College of Music",
+  "College of Nursing",
+  "College of Physical Therapy",
+  "College of Respiratory Therapy",
+  "School of International Relations",
+  "College of Law",
+  "College of Medicine",
+  "School of Graduate Studies"
+];
 
 interface MOA {
   id: string;
@@ -63,11 +84,6 @@ export default function AdminDashboard() {
     );
     return () => unsubscribe();
   }, []);
-
-  const colleges = useMemo(() => {
-    const unique = new Set(moas.map(m => m.endorsedByCollege).filter(Boolean));
-    return Array.from(unique).sort();
-  }, [moas]);
 
   const filteredMoas = useMemo(() => {
     return moas.filter(moa => {
@@ -189,8 +205,8 @@ export default function AdminDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Colleges</SelectItem>
-                    {colleges.map(college => (
-                      <SelectItem key={college} value={college || ''}>{college}</SelectItem>
+                    {COLLEGES.map(college => (
+                      <SelectItem key={college} value={college}>{college}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

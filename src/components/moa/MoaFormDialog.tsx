@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -18,6 +17,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
+const COLLEGES = [
+  "College of Accountancy",
+  "College of Agriculture",
+  "College of Arts and Sciences",
+  "College of Business Administration",
+  "College of Communication",
+  "College of Criminology",
+  "College of Education",
+  "College of Engineering and Architecture",
+  "College of Informatics and Computing Studies",
+  "College of Medical Technology",
+  "College of Midwifery",
+  "College of Music",
+  "College of Nursing",
+  "College of Physical Therapy",
+  "College of Respiratory Therapy",
+  "School of International Relations",
+  "College of Law",
+  "College of Medicine",
+  "School of Graduate Studies"
+];
+
 const moaSchema = z.object({
   hteId: z.string().min(1, 'HTE ID is required'),
   companyName: z.string().min(1, 'Company name is required'),
@@ -28,7 +49,7 @@ const moaSchema = z.object({
   effectiveDate: z.string().min(1, 'Effective date is required'),
   expiryDate: z.string().min(1, 'Expiry date is required'),
   status: z.string().min(1, 'Status is required'),
-  endorsedByCollege: z.string().optional(),
+  endorsedByCollege: z.string().min(1, 'College endorsement is required'),
 });
 
 type MoaFormValues = z.infer<typeof moaSchema>;
@@ -273,7 +294,18 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Endorsed By (College/Dept)</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select college" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COLLEGES.map(college => (
+                        <SelectItem key={college} value={college}>{college}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
