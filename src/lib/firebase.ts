@@ -13,6 +13,11 @@ const firebaseConfig = {
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+// One-time migration: clear old localStorage persistence
+if (typeof window !== 'undefined') {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('firebase:'));
+  keys.forEach(k => localStorage.removeItem(k));
+}
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
