@@ -78,7 +78,7 @@ export default function LoginPage() {
             Valid domains: <strong>@neu.edu.ph</strong>
           </p>
           <p className="text-[10px] text-muted-foreground text-center mt-2">
-            © 2024 New Era University. All Rights Reserved.
+            © 2026 New Era University. All Rights Reserved.
           </p>
         </CardFooter>
       </Card>

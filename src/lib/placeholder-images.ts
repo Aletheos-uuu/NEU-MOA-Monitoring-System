@@ -1,10 +1,10 @@
-{
-  "placeholderImages"; [
-    {
-      "id": "neu-logo",
-      "description": "New Era University Official Logo",
-      "imageUrl": "/neu-logo.png",
-      "imageHint": "university logo"
-    }
-  ]
-}
+import data from './placeholder-images.json';
+
+export type ImagePlaceholder = {
+  id: string;
+  description: string;
+  imageUrl: string;
+  imageHint: string;
+};
+
+export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;
