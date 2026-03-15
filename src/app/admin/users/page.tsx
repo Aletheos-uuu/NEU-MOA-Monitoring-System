@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -11,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Users as UsersIcon, ShieldAlert, CheckCircle2, ShieldCheck, Settings2 } from 'lucide-react';
+import { Users as UsersIcon, ShieldAlert, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -77,88 +76,90 @@ export default function UserManagementPage() {
         </div>
 
         <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>User Details</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>MOA Management</TableHead>
-                <TableHead>Account Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground italic">Loading users...</TableCell>
+                  <TableHead>User Details</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>MOA Management</TableHead>
+                  <TableHead>Account Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : users.map((user) => (
-                <TableRow key={user.uid}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-primary">{user.fullName}</span>
-                      <span className="text-xs text-muted-foreground">{user.email}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select defaultValue={user.role} onValueChange={(val) => handleRoleChange(user.uid, val as UserRole)}>
-                      <SelectTrigger className="w-[130px] h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="student">Student</SelectItem>
-                        <SelectItem value="faculty">Faculty</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    {user.role === 'faculty' ? (
-                      <div className="flex items-center gap-2">
-                        <Switch 
-                          checked={user.canManageMOA} 
-                          onCheckedChange={(checked) => handleManagementToggle(user.uid, checked)}
-                        />
-                        <span className="text-xs font-medium">
-                          {user.canManageMOA ? (
-                            <span className="text-green-600 flex items-center gap-1">
-                              <ShieldCheck className="h-3 w-3" /> Enabled
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">Disabled</span>
-                          )}
-                        </span>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground italic">Loading users...</TableCell>
+                  </TableRow>
+                ) : users.map((user) => (
+                  <TableRow key={user.uid}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-primary">{user.fullName}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
                       </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">N/A</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.isBlocked ? (
-                      <Badge variant="destructive" className="gap-1 px-2 py-0.5 text-[10px]">
-                        <ShieldAlert className="h-3 w-3" />
-                        BLOCKED
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 gap-1 px-2 py-0.5 text-[10px]">
-                        <CheckCircle2 className="h-3 w-3" />
-                        ACTIVE
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-xs text-muted-foreground">{user.isBlocked ? 'Unblock' : 'Block'}</span>
-                      <Switch 
-                        checked={user.isBlocked} 
-                        onCheckedChange={(checked) => handleBlockToggle(user.uid, checked)}
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell>
+                      <Select defaultValue={user.role} onValueChange={(val) => handleRoleChange(user.uid, val as UserRole)}>
+                        <SelectTrigger className="w-[130px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student">Student</SelectItem>
+                          <SelectItem value="faculty">Faculty</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      {user.role === 'faculty' ? (
+                        <div className="flex items-center gap-2">
+                          <Switch 
+                            checked={user.canManageMOA} 
+                            onCheckedChange={(checked) => handleManagementToggle(user.uid, checked)}
+                          />
+                          <span className="text-xs font-medium">
+                            {user.canManageMOA ? (
+                              <span className="text-green-600 flex items-center gap-1">
+                                <ShieldCheck className="h-3 w-3" /> Enabled
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">Disabled</span>
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">N/A</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.isBlocked ? (
+                        <Badge variant="destructive" className="gap-1 px-2 py-0.5 text-[10px]">
+                          <ShieldAlert className="h-3 w-3" />
+                          BLOCKED
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 gap-1 px-2 py-0.5 text-[10px]">
+                          <CheckCircle2 className="h-3 w-3" />
+                          ACTIVE
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{user.isBlocked ? 'Unblock' : 'Block'}</span>
+                        <Switch 
+                          checked={user.isBlocked} 
+                          onCheckedChange={(checked) => handleBlockToggle(user.uid, checked)}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </main>
     </div>
