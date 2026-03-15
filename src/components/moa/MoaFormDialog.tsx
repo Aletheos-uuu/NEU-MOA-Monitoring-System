@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -51,7 +52,7 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
       industryType: 'Technology',
       effectiveDate: '',
       expiryDate: '',
-      status: 'PROCESSING: MOA draft sent to Legal Office',
+      status: 'PROCESSING: MOA draft sent to Legal Office for Review',
       endorsedByCollege: '',
     },
   });
@@ -69,7 +70,7 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
         industryType: 'Technology',
         effectiveDate: '',
         expiryDate: '',
-        status: 'PROCESSING: MOA draft sent to Legal Office',
+        status: 'PROCESSING: MOA draft sent to Legal Office for Review',
         endorsedByCollege: '',
       });
     }
@@ -252,7 +253,7 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
                         "APPROVED: On-going notarization",
                         "APPROVED: No notarization needed",
                         "PROCESSING: Awaiting signature by HTE partner",
-                        "PROCESSING: MOA draft sent to Legal Office",
+                        "PROCESSING: MOA draft sent to Legal Office for Review",
                         "PROCESSING: MOA draft sent to VPAA/OP for approval",
                         "EXPIRED: No renewal done",
                         "EXPIRING: Two months before expiration"

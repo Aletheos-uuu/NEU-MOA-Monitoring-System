@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -10,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Users as UsersIcon, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Users as UsersIcon, ShieldAlert, CheckCircle2, ShieldCheck, Settings2 } from 'lucide-react';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -53,6 +54,16 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleManagementToggle = async (uid: string, canManageMOA: boolean) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { canManageMOA });
+      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, canManageMOA } : u));
+      toast({ title: 'Permissions Updated', description: canManageMOA ? 'Management access granted.' : 'Management access revoked.' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update permissions.' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -62,7 +73,7 @@ export default function UserManagementPage() {
             <UsersIcon className="h-8 w-8" />
             User Management
           </h1>
-          <p className="text-muted-foreground">Manage administrative roles and user access control.</p>
+          <p className="text-muted-foreground">Manage administrative roles, blocked users, and faculty management permissions.</p>
         </div>
 
         <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
@@ -71,6 +82,7 @@ export default function UserManagementPage() {
               <TableRow>
                 <TableHead>User Details</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>MOA Management</TableHead>
                 <TableHead>Account Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -78,7 +90,7 @@ export default function UserManagementPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground italic">Loading users...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground italic">Loading users...</TableCell>
                 </TableRow>
               ) : users.map((user) => (
                 <TableRow key={user.uid}>
@@ -99,6 +111,27 @@ export default function UserManagementPage() {
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    {user.role === 'faculty' ? (
+                      <div className="flex items-center gap-2">
+                        <Switch 
+                          checked={user.canManageMOA} 
+                          onCheckedChange={(checked) => handleManagementToggle(user.uid, checked)}
+                        />
+                        <span className="text-xs font-medium">
+                          {user.canManageMOA ? (
+                            <span className="text-green-600 flex items-center gap-1">
+                              <ShieldCheck className="h-3 w-3" /> Enabled
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">Disabled</span>
+                          )}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">N/A</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {user.isBlocked ? (
