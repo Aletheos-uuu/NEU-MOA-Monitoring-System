@@ -95,22 +95,31 @@ export function MOATable({ data, role, loading }: MOATableProps) {
 
   if (loading) return <div className="p-8 text-center text-muted-foreground italic">Syncing records...</div>;
 
+  const isStudent = role === 'student';
+  const isAdmin = role === 'admin';
+  const isFaculty = role === 'faculty';
+  const canManage = isAdmin || (isFaculty && profile?.canManageMOA);
+
   return (
     <>
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
-            <TableHead className="font-bold">Company / HTE ID</TableHead>
+            <TableHead className="font-bold">
+              {isStudent ? 'Company Name' : 'Company / HTE ID'}
+            </TableHead>
             <TableHead className="font-bold">Contact Details</TableHead>
-            <TableHead className="font-bold">College / Dept</TableHead>
-            <TableHead className="font-bold">Status</TableHead>
+            <TableHead className="font-bold">
+              {isStudent ? 'Location' : 'College / Dept'}
+            </TableHead>
+            {!isStudent && <TableHead className="font-bold">Status</TableHead>}
             <TableHead className="font-bold text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={isStudent ? 4 : 5} className="text-center py-12 text-muted-foreground">
                 No matching agreements found.
               </TableCell>
             </TableRow>
@@ -121,9 +130,11 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                   <span className={cn("font-semibold", moa.isDeleted && "line-through text-muted-foreground")}>
                     {moa.companyName}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                    ID: {moa.hteId} | {moa.industryType}
-                  </span>
+                  {!isStudent && (
+                    <span className="text-[10px] text-muted-foreground font-mono uppercase">
+                      ID: {moa.hteId} | {moa.industryType}
+                    </span>
+                  )}
                 </div>
               </TableCell>
               <TableCell>
@@ -133,17 +144,23 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="text-[10px] font-medium uppercase border-primary/20 bg-primary/5">
-                  {moa.endorsedByCollege || 'Not Specified'}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {moa.isDeleted ? (
-                  <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
+                {isStudent ? (
+                  <span className="text-xs text-muted-foreground line-clamp-1">{moa.address || 'N/A'}</span>
                 ) : (
-                  getStatusBadge(moa.status)
+                  <Badge variant="outline" className="text-[10px] font-medium uppercase border-primary/20 bg-primary/5">
+                    {moa.endorsedByCollege || 'Not Specified'}
+                  </Badge>
                 )}
               </TableCell>
+              {!isStudent && (
+                <TableCell>
+                  {moa.isDeleted ? (
+                    <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
+                  ) : (
+                    getStatusBadge(moa.status)
+                  )}
+                </TableCell>
+              )}
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link href={`/moa/${moa.id}`}>
@@ -151,7 +168,7 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </Link>
-                  {role === 'admin' && (
+                  {isAdmin && (
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -162,29 +179,31 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                       <History className="h-4 w-4" />
                     </Button>
                   )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingMoa(moa)} className="gap-2">
-                        <Edit className="h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      {role === 'admin' && (
-                        moa.isDeleted ? (
-                          <DropdownMenuItem onClick={() => handleRecover(moa)} className="gap-2 text-green-600 font-semibold">
-                            <RotateCcw className="h-4 w-4" /> Recover
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleSoftDelete(moa)} className="gap-2 text-destructive font-semibold">
-                            <Trash2 className="h-4 w-4" /> Soft Delete
-                          </DropdownMenuItem>
-                        )
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {canManage && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditingMoa(moa)} className="gap-2">
+                          <Edit className="h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                        {isAdmin && (
+                          moa.isDeleted ? (
+                            <DropdownMenuItem onClick={() => handleRecover(moa)} className="gap-2 text-green-600 font-semibold">
+                              <RotateCcw className="h-4 w-4" /> Recover
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleSoftDelete(moa)} className="gap-2 text-destructive font-semibold">
+                              <Trash2 className="h-4 w-4" /> Soft Delete
+                            </DropdownMenuItem>
+                          )
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

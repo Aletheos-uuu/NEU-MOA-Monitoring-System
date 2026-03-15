@@ -1,16 +1,123 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
-import { MOAList } from '@/components/moa/MOAList';
-import { MoaFormDialog } from '@/components/moa/MoaFormDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileText, LayoutDashboard } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MoaFormDialog } from '@/components/moa/MoaFormDialog';
+import { MOATable } from '@/components/moa/MOATable';
+import { FileText, AlertTriangle, Clock, CheckCircle2, Search, PlusCircle, Filter, LayoutDashboard } from 'lucide-react';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { startOfToday, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
+const COLLEGES = [
+  "College of Accountancy",
+  "College of Agriculture",
+  "College of Arts and Sciences",
+  "College of Business Administration",
+  "College of Communication",
+  "College of Criminology",
+  "College of Education",
+  "College of Engineering and Architecture",
+  "College of Informatics and Computing Studies",
+  "College of Medical Technology",
+  "College of Midwifery",
+  "College of Music",
+  "College of Nursing",
+  "College of Physical Therapy",
+  "College of Respiratory Therapy",
+  "School of International Relations",
+  "College of Law",
+  "College of Medicine",
+  "School of Graduate Studies"
+];
+
+interface MOA {
+  id: string;
+  hteId: string;
+  companyName: string;
+  address?: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  industryType: string;
+  effectiveDate: string;
+  expiryDate: string;
+  status: string;
+  endorsedByCollege?: string;
+  isDeleted: boolean;
+  auditTrail: any[];
+}
 
 export default function FacultyDashboard() {
   const { profile } = useAuth();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [moas, setMoas] = useState<MOA[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [collegeFilter, setCollegeFilter] = useState('all');
+  const [datePreset, setDatePreset] = useState('all');
+
+  useEffect(() => {
+    // Faculty only see non-deleted records
+    const q = query(collection(db, 'moas'), where('isDeleted', '==', false));
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MOA));
+        setMoas(data);
+        setLoading(false);
+      },
+      async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'moas',
+          operation: 'list',
+        }));
+        setLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const filteredMoas = useMemo(() => {
+    return moas.filter(moa => {
+      if (collegeFilter !== 'all' && moa.endorsedByCollege !== collegeFilter) return false;
+
+      if (datePreset !== 'all') {
+        const effectiveDate = parseISO(moa.effectiveDate);
+        if (datePreset === 'today' && !isAfter(effectiveDate, startOfToday())) return false;
+        if (datePreset === 'week' && !isAfter(effectiveDate, startOfWeek(new Date()))) return false;
+        if (datePreset === 'month' && !isAfter(effectiveDate, startOfMonth(new Date()))) return false;
+      }
+
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        return (
+          moa.companyName.toLowerCase().includes(search) ||
+          moa.address?.toLowerCase().includes(search) ||
+          moa.contactPerson?.toLowerCase().includes(search) ||
+          moa.contactEmail?.toLowerCase().includes(search) ||
+          moa.endorsedByCollege?.toLowerCase().includes(search) ||
+          moa.industryType.toLowerCase().includes(search)
+        );
+      }
+
+      return true;
+    });
+  }, [moas, collegeFilter, datePreset, searchTerm]);
+
+  const stats = useMemo(() => {
+    const active = filteredMoas.filter(m => m.status.startsWith('APPROVED')).length;
+    const processing = filteredMoas.filter(m => m.status.startsWith('PROCESSING')).length;
+    const expired = filteredMoas.filter(m => m.status.startsWith('EXPIRED')).length;
+    const expiring = filteredMoas.filter(m => m.status.startsWith('EXPIRING')).length;
+    return { active, processing, expired, expiring };
+  }, [filteredMoas]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -18,34 +125,110 @@ export default function FacultyDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
-              <h1 className="text-3xl font-bold text-primary">Faculty Dashboard</h1>
-            </div>
-            <p className="text-muted-foreground">Manage your department's agreements and research partnerships.</p>
+            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+              <LayoutDashboard className="h-7 w-7" />
+              Faculty Dashboard
+            </h1>
+            <p className="text-muted-foreground text-sm">Monitor department agreements and manage active institutional partnerships.</p>
           </div>
-          <div className="flex gap-3">
-            {profile?.canManageMOA && (
-              <Button className="gap-2 shadow-md" onClick={() => setIsAddOpen(true)}>
-                <PlusCircle className="h-4 w-4" />
-                New Agreement
-              </Button>
-            )}
+          {profile?.canManageMOA && (
+            <Button className="gap-2 shadow-lg" onClick={() => setIsAddOpen(true)}>
+              <PlusCircle className="h-5 w-5" />
+              New Agreement
+            </Button>
+          )}
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <Card className="border-l-4 border-l-green-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active MOAs</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.active}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-amber-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Processing</CardTitle>
+              <Clock className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.processing}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-red-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expired</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.expired}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expiring</CardTitle>
+              <FileText className="h-4 w-4 text-indigo-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.expiring}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="bg-white p-4 rounded-xl border shadow-sm mb-6 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search by company, contact, or college..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={collegeFilter} onValueChange={setCollegeFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Colleges" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Colleges</SelectItem>
+                    {COLLEGES.map(college => (
+                      <SelectItem key={college} value={college}>{college}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Select value={datePreset} onValueChange={setDatePreset}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Since Today</SelectItem>
+                  <SelectItem value="week">Since This Week</SelectItem>
+                  <SelectItem value="month">Since This Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 mb-8 border shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold flex items-center gap-2 text-primary">
-              <FileText className="h-5 w-5" />
-              Active Partnerships
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="p-4 border-b bg-muted/30">
+            <h2 className="text-sm font-semibold text-primary uppercase tracking-tight flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Agreement Records ({filteredMoas.length})
             </h2>
-            <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-              Role: <span className="font-bold uppercase">{profile?.role}</span> 
-              {profile?.canManageMOA && <span className="ml-2 text-green-600 font-bold">• MANAGEMENT ENABLED</span>}
-            </div>
           </div>
-          <MOAList role="faculty" />
+          <MOATable data={filteredMoas} role="faculty" loading={loading} />
         </div>
 
         <MoaFormDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
