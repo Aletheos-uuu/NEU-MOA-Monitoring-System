@@ -6,8 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { MOAList } from '@/components/moa/MOAList';
 import { MoaFormDialog } from '@/components/moa/MoaFormDialog';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Cpu, FileText, LayoutDashboard } from 'lucide-react';
-import Link from 'next/link';
+import { PlusCircle, FileText, LayoutDashboard } from 'lucide-react';
 
 export default function FacultyDashboard() {
   const { profile } = useAuth();
@@ -26,12 +25,6 @@ export default function FacultyDashboard() {
             <p className="text-muted-foreground">Manage your department's agreements and research partnerships.</p>
           </div>
           <div className="flex gap-3">
-             <Link href="/ai-tools">
-              <Button variant="outline" className="gap-2">
-                <Cpu className="h-4 w-4 text-accent" />
-                Analyze MOA
-              </Button>
-            </Link>
             {profile?.canManageMOA && (
               <Button className="gap-2 shadow-md" onClick={() => setIsAddOpen(true)}>
                 <PlusCircle className="h-4 w-4" />

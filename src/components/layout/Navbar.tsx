@@ -1,10 +1,9 @@
-
 "use client";
 
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { FileText, Users, LayoutDashboard, LogOut, Cpu } from 'lucide-react';
+import { FileText, Users, LayoutDashboard, LogOut } from 'lucide-react';
 
 export function Navbar() {
   const { profile, logout } = useAuth();
@@ -27,13 +26,6 @@ export function Navbar() {
                 Dashboard
               </Link>
               
-              {(profile.role === 'admin' || profile.role === 'faculty') && (
-                <Link href="/ai-tools" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                  <Cpu className="h-4 w-4" />
-                  AI Tools
-                </Link>
-              )}
-
               {profile.role === 'admin' && (
                 <Link href="/admin/users" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                   <Users className="h-4 w-4" />
