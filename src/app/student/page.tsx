@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MOATable } from '@/components/moa/MOATable';
-import { FileText, CheckCircle2, Search, Filter, GraduationCap } from 'lucide-react';
+import { FileText, CheckCircle2, Search, Filter, GraduationCap, Clock, AlertTriangle } from 'lucide-react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { startOfToday, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
+import { startOfToday, startOfWeek, startOfMonth, isAfter, isBefore, parseISO, addMonths } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -90,6 +90,22 @@ export default function StudentDashboard() {
     return () => unsubscribe();
   }, []);
 
+  const getEffectiveStatus = (moa: MOA) => {
+    const today = startOfToday();
+    const expiry = parseISO(moa.expiryDate);
+    
+    if (isBefore(expiry, today)) {
+      return "EXPIRED: No renewal done";
+    }
+    
+    const twoMonthsFromNow = addMonths(today, 2);
+    if (isBefore(expiry, twoMonthsFromNow) && moa.status.startsWith('APPROVED')) {
+      return "EXPIRING: Two months before expiration";
+    }
+    
+    return moa.status;
+  };
+
   const filteredMoas = useMemo(() => {
     return moas.filter(moa => {
       if (collegeFilter !== 'all' && moa.endorsedByCollege !== collegeFilter) return false;
@@ -103,6 +119,7 @@ export default function StudentDashboard() {
 
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
+        const effectiveStatus = getEffectiveStatus(moa).toLowerCase();
         return (
           moa.companyName.toLowerCase().includes(search) ||
           moa.address?.toLowerCase().includes(search) ||
@@ -110,7 +127,7 @@ export default function StudentDashboard() {
           moa.contactEmail?.toLowerCase().includes(search) ||
           moa.endorsedByCollege?.toLowerCase().includes(search) ||
           moa.industryType.toLowerCase().includes(search) ||
-          moa.status.toLowerCase().includes(search)
+          effectiveStatus.includes(search)
         );
       }
 
@@ -119,8 +136,25 @@ export default function StudentDashboard() {
   }, [moas, collegeFilter, datePreset, searchTerm]);
 
   const stats = useMemo(() => {
+    let active = 0;
+    let expired = 0;
+    let expiring = 0;
+
+    filteredMoas.forEach(m => {
+      const effectiveStatus = getEffectiveStatus(m);
+      if (effectiveStatus.startsWith('EXPIRED')) {
+        expired++;
+      } else if (effectiveStatus.startsWith('EXPIRING')) {
+        expiring++;
+      } else if (effectiveStatus.startsWith('APPROVED')) {
+        active++;
+      }
+    });
+
     return { 
-      active: filteredMoas.length,
+      active, 
+      expired,
+      expiring,
       colleges: new Set(filteredMoas.map(m => m.endorsedByCollege)).size
     };
   }, [filteredMoas]);
@@ -145,6 +179,24 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.active}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expiring Soon</CardTitle>
+              <Clock className="h-4 w-4 text-indigo-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.expiring}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-red-500 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expired</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.expired}</div>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-primary shadow-sm">

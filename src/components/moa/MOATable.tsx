@@ -15,6 +15,7 @@ import { MoaFormDialog } from './MoaFormDialog';
 import { AuditTrailDialog } from './AuditTrailDialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { startOfToday, isBefore, parseISO, addMonths } from 'date-fns';
 
 interface MOA {
   id: string;
@@ -42,6 +43,22 @@ export function MOATable({ data, role, loading }: MOATableProps) {
   const { profile } = useAuth();
   const [editingMoa, setEditingMoa] = useState<MOA | null>(null);
   const [auditMoa, setAuditMoa] = useState<MOA | null>(null);
+
+  const getEffectiveStatus = (moa: MOA) => {
+    const today = startOfToday();
+    const expiry = parseISO(moa.expiryDate);
+    
+    if (isBefore(expiry, today)) {
+      return "EXPIRED: No renewal done";
+    }
+    
+    const twoMonthsFromNow = addMonths(today, 2);
+    if (isBefore(expiry, twoMonthsFromNow) && moa.status.startsWith('APPROVED')) {
+      return "EXPIRING: Two months before expiration";
+    }
+    
+    return moa.status;
+  };
 
   const handleSoftDelete = (moa: MOA) => {
     if (!profile) return;
@@ -85,11 +102,12 @@ export function MOATable({ data, role, loading }: MOATableProps) {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (moa: MOA) => {
+    const status = getEffectiveStatus(moa);
+    if (status.includes('EXPIRING')) return <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50 gap-1"><Clock className="h-3 w-3" /> Expiring</Badge>;
+    if (status.includes('EXPIRED')) return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" /> Expired</Badge>;
     if (status.includes('APPROVED')) return <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 gap-1"><CheckCircle2 className="h-3 w-3" /> Approved</Badge>;
     if (status.includes('PROCESSING')) return <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-amber-200 gap-1"><Clock className="h-3 w-3" /> Processing</Badge>;
-    if (status.includes('EXPIRED')) return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" /> Expired</Badge>;
-    if (status.includes('EXPIRING')) return <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50 gap-1"><Clock className="h-3 w-3" /> Expiring</Badge>;
     return <Badge variant="outline">{status}</Badge>;
   };
 
@@ -112,7 +130,7 @@ export function MOATable({ data, role, loading }: MOATableProps) {
             <TableHead className="font-bold">
               {isStudent ? 'Location' : 'College / Dept'}
             </TableHead>
-            {!isStudent && <TableHead className="font-bold">Status</TableHead>}
+            <TableHead className="font-bold">Status</TableHead>
             <TableHead className="font-bold text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -152,15 +170,13 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                   </Badge>
                 )}
               </TableCell>
-              {!isStudent && (
-                <TableCell>
-                  {moa.isDeleted ? (
-                    <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
-                  ) : (
-                    getStatusBadge(moa.status)
-                  )}
-                </TableCell>
-              )}
+              <TableCell>
+                {moa.isDeleted ? (
+                  <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
+                ) : (
+                  getStatusBadge(moa)
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link href={`/moa/${moa.id}`}>

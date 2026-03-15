@@ -12,7 +12,7 @@ import { MOATable } from '@/components/moa/MOATable';
 import { FileText, AlertTriangle, Clock, CheckCircle2, Search, PlusCircle, Filter } from 'lucide-react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { startOfToday, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
+import { startOfToday, startOfWeek, startOfMonth, isAfter, isBefore, parseISO, addMonths } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -83,6 +83,22 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
+  const getEffectiveStatus = (moa: MOA) => {
+    const today = startOfToday();
+    const expiry = parseISO(moa.expiryDate);
+    
+    if (isBefore(expiry, today)) {
+      return "EXPIRED: No renewal done";
+    }
+    
+    const twoMonthsFromNow = addMonths(today, 2);
+    if (isBefore(expiry, twoMonthsFromNow) && moa.status.startsWith('APPROVED')) {
+      return "EXPIRING: Two months before expiration";
+    }
+    
+    return moa.status;
+  };
+
   const filteredMoas = useMemo(() => {
     return moas.filter(moa => {
       if (collegeFilter !== 'all' && moa.endorsedByCollege !== collegeFilter) return false;
@@ -96,6 +112,7 @@ export default function AdminDashboard() {
 
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
+        const effectiveStatus = getEffectiveStatus(moa).toLowerCase();
         return (
           moa.companyName.toLowerCase().includes(search) ||
           moa.address?.toLowerCase().includes(search) ||
@@ -103,7 +120,7 @@ export default function AdminDashboard() {
           moa.contactEmail?.toLowerCase().includes(search) ||
           moa.endorsedByCollege?.toLowerCase().includes(search) ||
           moa.industryType.toLowerCase().includes(search) ||
-          moa.status.toLowerCase().includes(search)
+          effectiveStatus.includes(search)
         );
       }
 
@@ -112,10 +129,25 @@ export default function AdminDashboard() {
   }, [moas, collegeFilter, datePreset, searchTerm]);
 
   const stats = useMemo(() => {
-    const active = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('APPROVED')).length;
-    const processing = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('PROCESSING')).length;
-    const expired = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('EXPIRED')).length;
-    const expiring = filteredMoas.filter(m => !m.isDeleted && m.status.startsWith('EXPIRING')).length;
+    let active = 0;
+    let processing = 0;
+    let expired = 0;
+    let expiring = 0;
+
+    filteredMoas.forEach(m => {
+      if (m.isDeleted) return;
+      
+      const effectiveStatus = getEffectiveStatus(m);
+      if (effectiveStatus.startsWith('EXPIRED')) {
+        expired++;
+      } else if (effectiveStatus.startsWith('EXPIRING')) {
+        expiring++;
+      } else if (effectiveStatus.startsWith('APPROVED')) {
+        active++;
+      } else if (effectiveStatus.startsWith('PROCESSING')) {
+        processing++;
+      }
+    });
 
     return { active, processing, expired, expiring };
   }, [filteredMoas]);
