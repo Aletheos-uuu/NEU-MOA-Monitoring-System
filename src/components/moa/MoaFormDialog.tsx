@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { doc, setDoc, updateDoc, collection, addDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -12,7 +12,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -275,7 +274,7 @@ export function MoaFormDialog({ open, onOpenChange, initialData }: MoaFormDialog
                         "APPROVED: No notarization needed",
                         "PROCESSING: Awaiting signature by HTE partner",
                         "PROCESSING: MOA draft sent to Legal Office for Review",
-                        "PROCESSING: MOA draft sent to VPAA/OP for approval",
+                        "PROCESSING: MOA draft and opinion of legal office sent to VPAA/OP",
                         "EXPIRED: No renewal done",
                         "EXPIRING: Two months before expiration"
                       ].map(s => (

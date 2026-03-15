@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "MOA": {
@@ -22,7 +21,7 @@
             "APPROVED: No notarization needed",
             "PROCESSING: Awaiting signature by HTE partner",
             "PROCESSING: MOA draft sent to Legal Office for Review",
-            "PROCESSING: MOA draft sent to VPAA/OP for approval",
+            "PROCESSING: MOA draft and opinion of legal office sent to VPAA/OP",
             "EXPIRED: No renewal done",
             "EXPIRING: Two months before expiration"
           ] 
