@@ -120,112 +120,116 @@ export function MOATable({ data, role, loading }: MOATableProps) {
 
   return (
     <>
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead className="font-bold">
-              {isStudent ? 'Company Name' : 'Company / HTE ID'}
-            </TableHead>
-            <TableHead className="font-bold">Contact Details</TableHead>
-            <TableHead className="font-bold">
-              {isStudent ? 'Location' : 'College / Dept'}
-            </TableHead>
-            <TableHead className="font-bold">Status</TableHead>
-            <TableHead className="font-bold text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={isStudent ? 4 : 5} className="text-center py-12 text-muted-foreground">
-                No matching agreements found.
-              </TableCell>
-            </TableRow>
-          ) : data.map((moa) => (
-            <TableRow key={moa.id} className={cn(moa.isDeleted && "bg-destructive/5")}>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className={cn("font-semibold", moa.isDeleted && "line-through text-muted-foreground")}>
-                    {moa.companyName}
-                  </span>
-                  {!isStudent && (
-                    <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                      ID: {moa.hteId} | {moa.industryType}
-                    </span>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col text-xs">
-                  <span className="font-medium">{moa.contactPerson || 'N/A'}</span>
-                  <span className="text-muted-foreground">{moa.contactEmail || 'N/A'}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                {isStudent ? (
-                  <span className="text-xs text-muted-foreground line-clamp-1">{moa.address || 'N/A'}</span>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] font-medium uppercase border-primary/20 bg-primary/5">
-                    {moa.endorsedByCollege || 'Not Specified'}
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                {moa.isDeleted ? (
-                  <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
-                ) : (
-                  getStatusBadge(moa)
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Link href={`/moa/${moa.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="View Details">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  {isAdmin && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-amber-600"
-                      onClick={() => setAuditMoa(moa)}
-                      title="View Audit Trail"
-                    >
-                      <History className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {canManage && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[1000px]">
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="font-bold">
+                  {isStudent ? 'Company Name' : 'Company / HTE ID'}
+                </TableHead>
+                <TableHead className="font-bold">Contact Details</TableHead>
+                <TableHead className="font-bold">
+                  {isStudent ? 'Location' : 'College / Dept'}
+                </TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="font-bold text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                    No matching agreements found.
+                  </TableCell>
+                </TableRow>
+              ) : data.map((moa) => (
+                <TableRow key={moa.id} className={cn(moa.isDeleted && "bg-destructive/5")}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className={cn("font-semibold", moa.isDeleted && "line-through text-muted-foreground")}>
+                        {moa.companyName}
+                      </span>
+                      {!isStudent && (
+                        <span className="text-[10px] text-muted-foreground font-mono uppercase">
+                          ID: {moa.hteId} | {moa.industryType}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col text-xs">
+                      <span className="font-medium">{moa.contactPerson || 'N/A'}</span>
+                      <span className="text-muted-foreground">{moa.contactEmail || 'N/A'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {isStudent ? (
+                      <span className="text-xs text-muted-foreground line-clamp-1">{moa.address || 'N/A'}</span>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] font-medium uppercase border-primary/20 bg-primary/5">
+                        {moa.endorsedByCollege || 'Not Specified'}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {moa.isDeleted ? (
+                      <Badge variant="destructive" className="text-[10px]">DELETED</Badge>
+                    ) : (
+                      getStatusBadge(moa)
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/moa/${moa.id}`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="View Details">
+                          <ExternalLink className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingMoa(moa)} className="gap-2">
-                          <Edit className="h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        {isAdmin && (
-                          moa.isDeleted ? (
-                            <DropdownMenuItem onClick={() => handleRecover(moa)} className="gap-2 text-green-600 font-semibold">
-                              <RotateCcw className="h-4 w-4" /> Recover
+                      </Link>
+                      {isAdmin && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-amber-600"
+                          onClick={() => setAuditMoa(moa)}
+                          title="View Audit Trail"
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {canManage && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditingMoa(moa)} className="gap-2">
+                              <Edit className="h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={() => handleSoftDelete(moa)} className="gap-2 text-destructive font-semibold">
-                              <Trash2 className="h-4 w-4" /> Soft Delete
-                            </DropdownMenuItem>
-                          )
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                            {isAdmin && (
+                              moa.isDeleted ? (
+                                <DropdownMenuItem onClick={() => handleRecover(moa)} className="gap-2 text-green-600 font-semibold">
+                                  <RotateCcw className="h-4 w-4" /> Recover
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleSoftDelete(moa)} className="gap-2 text-destructive font-semibold">
+                                  <Trash2 className="h-4 w-4" /> Soft Delete
+                                </DropdownMenuItem>
+                              )
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {editingMoa && (
         <MoaFormDialog 
