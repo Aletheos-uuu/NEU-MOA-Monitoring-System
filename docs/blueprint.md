@@ -7,7 +7,6 @@
 - MOA List & Overview: Displays a personalized list of Memorandums of Agreement (MOAs) relevant to the logged-in user's role, with essential summary information and filtering options.
 - MOA Detail View: Provides a dedicated view for each MOA, showing comprehensive details, attached documents, and related information relevant to its status and participants.
 - User Role & Block Status Management: An administrative interface allowing 'admin' users to view all registered users, modify their roles (student, faculty, admin), and change their 'isBlocked' status in Firestore.
-- AI MOA Key Clause Identifier Tool: A generative AI tool for 'admin' and 'faculty' users to input MOA document text and receive AI-identified key clauses, actionable items, or obligations.
 - Authentication State Observer: Utilizes Firebase `onAuthStateChanged` to monitor user authentication status, performing a single `getDoc` call to fetch user profile data from Firestore upon login and managing the app's loading state.
 
 ## Style Guidelines:
