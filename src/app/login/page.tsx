@@ -1,12 +1,11 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { AlertCircle, CheckCircle2 as CheckCircle, FileText, Users } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, profile, loading } = useAuth();
@@ -19,69 +18,174 @@ export default function LoginPage() {
     }
   }, [profile, loading, router]);
 
+  const features = [
+    { icon: FileText, text: 'Real-time MOA status tracking' },
+    { icon: Users, text: 'Role-based access for admin, faculty & students' },
+    { icon: CheckCircle, text: 'Audit trail for all agreement changes' },
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="p-2">
-              {neuLogo && (
-                <Image 
-                  src={neuLogo.imageUrl} 
-                  alt="NEU Logo" 
-                  width={120} 
-                  height={120} 
-                  className="object-contain"
-                  data-ai-hint={neuLogo.imageHint}
-                />
-              )}
+    /*
+     * Desktop : side-by-side, locked to viewport height (no scroll)
+     * Mobile  : stacked — navy hero on top, white form card below
+     */
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#0b1d6e]">
+
+      {/* ─── Branding panel (full width on mobile, half on desktop) ─── */}
+      <div className="relative flex flex-col justify-between overflow-hidden bg-[#0b1d6e]
+                      px-8 pt-10 pb-8
+                      lg:w-[52%] lg:px-14 lg:py-0 lg:h-full">
+
+        {/* Background decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+            }}
+          />
+          <div className="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute bottom-0 -left-24 w-[360px] h-[360px] rounded-full bg-cyan-500/10 blur-3xl" />
+          <svg className="absolute bottom-0 right-0 opacity-10" width="320" height="320" viewBox="0 0 320 320" fill="none">
+            <circle cx="320" cy="320" r="280" stroke="white" strokeWidth="1" fill="none" />
+            <circle cx="320" cy="320" r="220" stroke="white" strokeWidth="1" fill="none" />
+            <circle cx="320" cy="320" r="160" stroke="white" strokeWidth="1" fill="none" />
+          </svg>
+        </div>
+
+        {/* Top: logo + university name */}
+        <div className="relative z-10 flex items-center gap-3 lg:pt-14">
+          {neuLogo && (
+            <div className="h-11 w-11 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center p-1.5 flex-shrink-0">
+              <Image src={neuLogo.imageUrl} alt="NEU Logo" width={40} height={40} className="object-contain" />
+            </div>
+          )}
+          <div>
+            <p className="text-white font-bold text-sm leading-tight">New Era University</p>
+            <p className="text-blue-300/70 text-[11px] tracking-wide">Est. 1950 · Quezon City, Philippines</p>
+          </div>
+        </div>
+
+        {/* Middle: headline + description + features — hidden on mobile to keep hero compact */}
+        <div className="relative z-10 hidden lg:block">
+          <h1 className="text-[3.2rem] font-extrabold text-white leading-[1.1] tracking-tight mb-4">
+            MOA<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+              Monitor
+            </span>
+          </h1>
+          <p className="text-blue-200/80 text-base leading-relaxed max-w-[320px] mb-8">
+            Centralized platform for managing Memorandums of Agreement across all NEU colleges and departments.
+          </p>
+          <div className="space-y-3.5">
+            {features.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="h-7 w-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-3.5 w-3.5 text-cyan-400" />
+                </div>
+                <span className="text-blue-100/90 text-sm">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile-only: short tagline so the top isn't empty */}
+        <div className="relative z-10 lg:hidden mt-5 mb-2">
+          <h1 className="text-3xl font-extrabold text-white leading-tight tracking-tight">
+            MOA <span className="text-cyan-400">Monitor</span>
+          </h1>
+          <p className="text-blue-200/70 text-sm mt-1.5">
+            NEU's institutional partnership management platform.
+          </p>
+        </div>
+
+        {/* Bottom: copyright — desktop only */}
+        <div className="relative z-10 hidden lg:block lg:pb-14">
+          <p className="text-blue-400/50 text-xs">
+            © {new Date().getFullYear()} New Era University · All rights reserved
+          </p>
+        </div>
+      </div>
+
+      {/* ─── Form panel ─── */}
+      <div className="
+        flex-1 flex items-center justify-center
+        bg-white
+        rounded-t-3xl lg:rounded-none
+        px-6 py-10 sm:px-10
+        lg:overflow-y-auto
+      ">
+        <div className="w-full max-w-[400px]">
+
+          {/* Heading */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">
+              Welcome back
+            </h2>
+            <p className="text-gray-500 text-sm leading-relaxed">
+              Sign in with your institutional Google account to access the system.
+            </p>
+          </div>
+
+          {/* Sign-in button */}
+          <button
+            onClick={login}
+            className="group w-full flex items-center gap-3 h-[52px] px-5 rounded-xl font-semibold text-sm text-white transition-all duration-200
+              bg-[#0b1d6e] hover:bg-[#0d228a]
+              shadow-[0_4px_14px_rgba(11,29,110,0.35)] hover:shadow-[0_6px_20px_rgba(11,29,110,0.45)]
+              hover:scale-[1.015] active:scale-[0.995]"
+          >
+            <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
+              <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 0 1-6.723-4.823l-4.04 3.067A11.965 11.965 0 0 0 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987z"/>
+              <path fill="#4A90E2" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21z"/>
+              <path fill="#FBBC05" d="M5.277 14.268A7.12 7.12 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067z"/>
+            </svg>
+            <span className="flex-1 text-center">Continue with NEU Google</span>
+            <svg
+              className="h-4 w-4 opacity-50 group-hover:translate-x-0.5 transition-transform flex-shrink-0"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+
+          {/* Domain restriction note */}
+          <div className="mt-5 flex items-start gap-2.5 p-3.5 bg-amber-50 border border-amber-100 rounded-xl">
+            <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-amber-800 text-xs leading-relaxed">
+              Access is restricted to{' '}
+              <span className="font-semibold font-mono">@neu.edu.ph</span>{' '}
+              email addresses only.
+            </p>
+          </div>
+
+          {/* Access level badges */}
+          <div className="mt-7 pt-7 border-t border-gray-100">
+            <p className="text-[10px] text-gray-400 text-center mb-3 uppercase tracking-widest font-bold">
+              Access Levels
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { role: 'Admin',   color: 'bg-violet-100 text-violet-700' },
+                { role: 'Faculty', color: 'bg-blue-100   text-blue-700'   },
+                { role: 'Student', color: 'bg-emerald-100 text-emerald-700' },
+              ].map(({ role, color }) => (
+                <div key={role} className={`${color} rounded-lg py-1.5 text-center text-[11px] font-semibold`}>
+                  {role}
+                </div>
+              ))}
             </div>
           </div>
-          <div>
-            <CardTitle className="text-3xl font-bold tracking-tight text-primary">NEU MOA Monitor</CardTitle>
-            <CardDescription className="text-lg mt-2 font-medium text-muted-foreground">
-              Memorandum of Agreement Monitoring App
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-center text-muted-foreground">
-            Sign in with your institutional Google account to access the platform.
+
+          {/* Mobile copyright */}
+          <p className="lg:hidden text-center text-[10px] text-gray-400 mt-8">
+            © {new Date().getFullYear()} New Era University · All rights reserved
           </p>
-          <Button 
-            onClick={login} 
-            className="w-full h-12 text-lg font-semibold gap-2 shadow-md hover:shadow-lg transition-all"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="currentColor"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"
-              />
-            </svg>
-            Sign in with NEU Google
-          </Button>
-        </CardContent>
-        <CardFooter className="flex justify-center flex-col gap-1 border-t pt-6">
-          <p className="text-xs text-muted-foreground text-center">
-            Valid domains: <strong>@neu.edu.ph</strong>
-          </p>
-          <p className="text-[10px] text-muted-foreground text-center mt-2">
-            © 2026 New Era University. All Rights Reserved.
-          </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
