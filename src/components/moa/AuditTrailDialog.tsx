@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -22,18 +22,17 @@ interface AuditTrailDialogProps {
 }
 
 export function AuditTrailDialog({ open, onOpenChange, trail, companyName }: AuditTrailDialogProps) {
-  // Sort trail by timestamp descending (newest first)
-  const sortedTrail = [...(trail || [])].sort((a, b) => 
+  const sortedTrail = [...(trail || [])].sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   const getOperationBadge = (op: string) => {
     switch (op) {
-      case 'INSERT': return <Badge className="bg-green-500 hover:bg-green-600">INSERT</Badge>;
-      case 'UPDATE': return <Badge className="bg-blue-500 hover:bg-blue-600">UPDATE</Badge>;
-      case 'DELETE': return <Badge variant="destructive">DELETE</Badge>;
+      case 'INSERT':  return <Badge className="bg-green-500 hover:bg-green-600">INSERT</Badge>;
+      case 'UPDATE':  return <Badge className="bg-blue-500 hover:bg-blue-600">UPDATE</Badge>;
+      case 'DELETE':  return <Badge variant="destructive">DELETE</Badge>;
       case 'RECOVER': return <Badge className="bg-purple-500 hover:bg-purple-600">RECOVER</Badge>;
-      default: return <Badge variant="outline">{op}</Badge>;
+      default:        return <Badge variant="outline">{op}</Badge>;
     }
   };
 
@@ -45,8 +44,11 @@ export function AuditTrailDialog({ open, onOpenChange, trail, companyName }: Aud
             <History className="h-5 w-5 text-primary" />
             Audit History: {companyName}
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            A full record of all changes made to this agreement.
+          </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-y-auto mt-4 border rounded-md shadow-inner">
           <Table>
             <TableHeader className="bg-muted/50 sticky top-0 z-10">

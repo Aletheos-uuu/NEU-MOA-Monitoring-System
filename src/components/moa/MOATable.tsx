@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
@@ -17,7 +16,7 @@ import { MoaFormDialog } from './MoaFormDialog';
 import { AuditTrailDialog } from './AuditTrailDialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { startOfToday, isBefore, parseISO, addMonths, format } from 'date-fns';
+import { startOfToday, isBefore, parseISO, addMonths } from 'date-fns';
 
 interface MOA {
   id: string; hteId: string; companyName: string; address?: string;
@@ -32,17 +31,14 @@ interface MOATableProps {
   loading: boolean;
 }
 
-/* ── Status helpers ─────────────────────────────────────── */
+/* ── Status pill ─────────────────────────────────────── */
 function StatusPill({ status, isDeleted }: { status: string; isDeleted?: boolean }) {
-  if (isDeleted) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 border border-gray-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-        Deleted
-      </span>
-    );
-  }
-
+  if (isDeleted) return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+      Deleted
+    </span>
+  );
   if (status.includes('EXPIRING')) return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">
       <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
@@ -74,7 +70,6 @@ function StatusPill({ status, isDeleted }: { status: string; isDeleted?: boolean
   );
 }
 
-/* ── Row accent by status ─────────────────────────────────── */
 function rowAccentClass(moa: MOA, effectiveStatus: string): string {
   if (moa.isDeleted) return 'bg-gray-50/60 opacity-70';
   if (effectiveStatus.includes('EXPIRED')) return 'hover:bg-red-50/30';
@@ -91,7 +86,6 @@ function getRowLeftColor(effectiveStatus: string, isDeleted: boolean): string {
   return 'border-l-amber-400';
 }
 
-/* ── Industry badge ─────────────────────────────────────── */
 function IndustryBadge({ industry }: { industry: string }) {
   const colorMap: Record<string, string> = {
     Technology: 'bg-blue-50 text-blue-600 border-blue-100',
@@ -108,12 +102,79 @@ function IndustryBadge({ industry }: { industry: string }) {
   );
 }
 
-/* ── Empty state ─────────────────────────────────────────── */
+/* ── Shimmer skeleton cell ──────────────────────────── */
+function SkeletonCell({ width = '60%', height = '12px' }: { width?: string; height?: string }) {
+  return (
+    <div
+      className="rounded-lg skeleton-shimmer"
+      style={{ width, height }}
+    />
+  );
+}
+
+/* ── Shimmer loading rows ───────────────────────────── */
+function LoadingState() {
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <tr
+          key={i}
+          className="border-b border-gray-100"
+          style={{
+            animation: 'fadeIn 0.3s ease-out both',
+            animationDelay: `${i * 60}ms`,
+          }}
+        >
+          {/* Company */}
+          <td className="px-4 py-4">
+            <div className="flex flex-col gap-2">
+              <SkeletonCell width="55%" height="14px" />
+              <div className="flex gap-2">
+                <SkeletonCell width="22%" height="10px" />
+                <SkeletonCell width="28%" height="10px" />
+              </div>
+            </div>
+          </td>
+          {/* Contact */}
+          <td className="px-4 py-4">
+            <div className="flex flex-col gap-2">
+              <SkeletonCell width="60%" height="12px" />
+              <SkeletonCell width="75%" height="10px" />
+            </div>
+          </td>
+          {/* College */}
+          <td className="px-4 py-4">
+            <div className="flex flex-col gap-2">
+              <SkeletonCell width="70%" height="12px" />
+              <SkeletonCell width="45%" height="10px" />
+            </div>
+          </td>
+          {/* Status */}
+          <td className="px-4 py-4">
+            <SkeletonCell width="80px" height="26px" />
+          </td>
+          {/* Actions */}
+          <td className="px-4 py-4 text-right">
+            <div className="flex justify-end gap-1">
+              <SkeletonCell width="28px" height="28px" />
+              <SkeletonCell width="28px" height="28px" />
+            </div>
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
+/* ── Empty state ─────────────────────────────────────── */
 function EmptyState() {
   return (
     <tr>
       <td colSpan={5} className="py-16 text-center">
-        <div className="flex flex-col items-center gap-3">
+        <div
+          className="flex flex-col items-center gap-3"
+          style={{ animation: 'scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both' }}
+        >
           <div className="h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center">
             <Building2 className="h-7 w-7 text-gray-400" />
           </div>
@@ -127,24 +188,7 @@ function EmptyState() {
   );
 }
 
-/* ── Loading state ───────────────────────────────────────── */
-function LoadingState() {
-  return (
-    <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="border-b border-gray-100">
-          {Array.from({ length: 5 }).map((_, j) => (
-            <td key={j} className="px-4 py-3.5">
-              <div className="h-4 bg-gray-100 rounded-lg animate-pulse" style={{ width: j === 0 ? '70%' : j === 4 ? '40%' : '60%' }} />
-            </td>
-          ))}
-        </tr>
-      ))}
-    </>
-  );
-}
-
-/* ── Main component ──────────────────────────────────────── */
+/* ── Main component ──────────────────────────────────── */
 export function MOATable({ data, role, loading }: MOATableProps) {
   const { profile } = useAuth();
   const [editingMoa, setEditingMoa] = useState<MOA | null>(null);
@@ -191,22 +235,19 @@ export function MOATable({ data, role, loading }: MOATableProps) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/70">
+            <tr
+              className="border-b border-gray-100 bg-gray-50/70"
+              style={{ animation: 'fadeIn 0.3s ease-out both' }}
+            >
               <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">
                 {isStudent ? 'Company' : 'Company / HTE ID'}
               </th>
-              <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">
-                Contact
-              </th>
+              <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">Contact</th>
               <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">
                 {isStudent ? 'Location' : 'College / Dept'}
               </th>
-              <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">
-                Status
-              </th>
-              <th className="text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">
-                Actions
-              </th>
+              <th className="text-left text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">Status</th>
+              <th className="text-right text-[11px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3.5">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -215,13 +256,19 @@ export function MOATable({ data, role, loading }: MOATableProps) {
             ) : data.length === 0 ? (
               <EmptyState />
             ) : (
-              data.map((moa) => {
+              data.map((moa, index) => {
                 const effectiveStatus = getEffectiveStatus(moa);
+                /* Cap stagger so long lists don't wait forever */
+                const staggerDelay = Math.min(index * 40, 400);
                 return (
                   <tr
                     key={moa.id}
+                    style={{
+                      animation: 'rowEnter 0.35s cubic-bezier(0.22,1,0.36,1) both',
+                      animationDelay: `${staggerDelay}ms`,
+                    }}
                     className={cn(
-                      'group border-b border-gray-100 border-l-2 transition-colors',
+                      'group border-b border-gray-100 border-l-2 transition-colors duration-150',
                       rowAccentClass(moa, effectiveStatus),
                       getRowLeftColor(effectiveStatus, moa.isDeleted)
                     )}
@@ -287,7 +334,7 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-gray-400 hover:text-primary hover:bg-primary/8 opacity-0 group-hover:opacity-100 transition-all"
+                            className="h-8 w-8 text-gray-400 hover:text-primary hover:bg-primary/8 opacity-0 group-hover:opacity-100 transition-all duration-150"
                             title="View Details"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
@@ -298,7 +345,7 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-gray-400 hover:text-amber-600 hover:bg-amber-50 opacity-0 group-hover:opacity-100 transition-all"
+                            className="h-8 w-8 text-gray-400 hover:text-amber-600 hover:bg-amber-50 opacity-0 group-hover:opacity-100 transition-all duration-150"
                             onClick={() => setAuditMoa(moa)}
                             title="View Audit Trail"
                           >
@@ -312,16 +359,13 @@ export function MOATable({ data, role, loading }: MOATableProps) {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-gray-400 hover:text-gray-700 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-all"
+                                className="h-8 w-8 text-gray-400 hover:text-gray-700 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-all duration-150"
                               >
                                 <MoreHorizontal className="h-3.5 w-3.5" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44 shadow-lg">
-                              <DropdownMenuItem
-                                onClick={() => setEditingMoa(moa)}
-                                className="gap-2 text-sm"
-                              >
+                              <DropdownMenuItem onClick={() => setEditingMoa(moa)} className="gap-2 text-sm">
                                 <Edit className="h-3.5 w-3.5" />
                                 Edit agreement
                               </DropdownMenuItem>

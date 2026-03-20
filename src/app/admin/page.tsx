@@ -18,6 +18,7 @@ import { db } from '@/lib/firebase';
 import { startOfToday, startOfWeek, startOfMonth, isAfter, isBefore, parseISO, addMonths } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useCountUp } from '@/hooks/use-count-up';
 
 const COLLEGES = [
   "College of Accountancy","College of Agriculture","College of Arts and Sciences",
@@ -43,6 +44,52 @@ const statConfig = [
   { key: 'expired',    label: 'Expired',         desc: 'Need renewal',           icon: AlertTriangle, bar: 'bg-red-500',     iconBg: 'bg-red-50',     iconColor: 'text-red-500' },
   { key: 'expiring',   label: 'Expiring Soon',   desc: 'Within 2 months',        icon: Bell,          bar: 'bg-violet-500',  iconBg: 'bg-violet-50',  iconColor: 'text-violet-500' },
 ] as const;
+
+/* ── Animated stat card ─────────────────────────────── */
+interface StatCardProps {
+  label: string;
+  desc: string;
+  value: number;
+  icon: React.ElementType;
+  bar: string;
+  iconBg: string;
+  iconColor: string;
+  index: number;
+}
+
+function StatCard({ label, desc, value, icon: Icon, bar, iconBg, iconColor, index }: StatCardProps) {
+  const count = useCountUp(value, 700, index * 80 + 200);
+
+  return (
+    <div
+      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 card-hover"
+      style={{
+        animation: 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both',
+        animationDelay: `${index * 80}ms`,
+      }}
+    >
+      <div className={`h-1 ${bar} origin-left`} style={{ animation: 'barFill 0.6s ease-out both', animationDelay: `${index * 80 + 300}ms` }} />
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">{label}</p>
+          <div
+            className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center`}
+            style={{ animation: 'scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both', animationDelay: `${index * 80 + 150}ms` }}
+          >
+            <Icon className={`h-4 w-4 ${iconColor}`} />
+          </div>
+        </div>
+        <p
+          className="text-[2.5rem] font-extrabold text-gray-900 leading-none mb-1 tabular-nums"
+          style={{ animation: 'fadeIn 0.3s ease-out both', animationDelay: `${index * 80 + 200}ms` }}
+        >
+          {count}
+        </p>
+        <p className="text-xs text-gray-400">{desc}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -122,7 +169,10 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* ── Page header ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div
+          className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4"
+          style={{ animation: 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both' }}
+        >
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary/50 mb-1.5">
               <BarChart3 className="h-3.5 w-3.5" />
@@ -133,49 +183,45 @@ export default function AdminDashboard() {
               System-wide monitoring and institutional partnership oversight.
             </p>
           </div>
-          <Button
-            onClick={() => setIsAddOpen(true)}
-            className="gap-2 h-10 px-5 shadow-md bg-primary hover:bg-primary/90 text-sm font-semibold"
-          >
-            <PlusCircle className="h-4 w-4" />
-            New Agreement
-          </Button>
+          <div style={{ animation: 'fadeIn 0.4s ease-out both', animationDelay: '100ms' }}>
+            <Button
+              onClick={() => setIsAddOpen(true)}
+              className="gap-2 h-10 px-5 shadow-md bg-primary hover:bg-primary/90 text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-px active:translate-y-0"
+            >
+              <PlusCircle className="h-4 w-4" />
+              New Agreement
+            </Button>
+          </div>
         </div>
 
         {/* ── Stat cards ── */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-7">
-          {statConfig.map(({ key, label, desc, icon: Icon, bar, iconBg, iconColor }, i) => (
-            <div
+          {statConfig.map(({ key, label, desc, icon, bar, iconBg, iconColor }, i) => (
+            <StatCard
               key={key}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              {/* coloured top stripe */}
-              <div className={`h-1 ${bar}`} />
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">{label}</p>
-                  <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center`}>
-                    <Icon className={`h-4.5 w-4.5 ${iconColor}`} />
-                  </div>
-                </div>
-                <p className="text-[2.5rem] font-extrabold text-gray-900 leading-none mb-1">
-                  {stats[key]}
-                </p>
-                <p className="text-xs text-gray-400">{desc}</p>
-              </div>
-            </div>
+              label={label}
+              desc={desc}
+              value={stats[key]}
+              icon={icon}
+              bar={bar}
+              iconBg={iconBg}
+              iconColor={iconColor}
+              index={i}
+            />
           ))}
         </div>
 
         {/* ── Filters ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5">
+        <div
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5"
+          style={{ animation: 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both', animationDelay: '350ms' }}
+        >
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search by company, college, status, contact…"
-                className="pl-10 h-10 bg-gray-50 border-gray-200 placeholder:text-gray-400 focus:bg-white transition-colors rounded-xl"
+                className="pl-10 h-10 bg-gray-50 border-gray-200 placeholder:text-gray-400 focus:bg-white transition-all duration-200 rounded-xl"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -184,7 +230,7 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4 text-gray-400 flex-shrink-0" />
                 <Select value={collegeFilter} onValueChange={setCollegeFilter}>
-                  <SelectTrigger className="w-[210px] h-10 bg-gray-50 border-gray-200 rounded-xl text-sm">
+                  <SelectTrigger className="w-[210px] h-10 bg-gray-50 border-gray-200 rounded-xl text-sm transition-colors hover:bg-white">
                     <SelectValue placeholder="All Colleges" />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,7 +240,7 @@ export default function AdminDashboard() {
                 </Select>
               </div>
               <Select value={datePreset} onValueChange={setDatePreset}>
-                <SelectTrigger className="w-[150px] h-10 bg-gray-50 border-gray-200 rounded-xl text-sm">
+                <SelectTrigger className="w-[150px] h-10 bg-gray-50 border-gray-200 rounded-xl text-sm transition-colors hover:bg-white">
                   <SelectValue placeholder="All Time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -209,7 +255,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* ── Table ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+          style={{ animation: 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both', animationDelay: '430ms' }}
+        >
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center">
